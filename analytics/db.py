@@ -26,7 +26,11 @@ query_layer("RAW DATA", BRONZE_PATH, """
 """)
 
 query_layer("1-MIN AVG", SILVER_PATH, """
-    SELECT symbol, "window".start AS window_start, "window".end AS window_end, avg_price
+    SELECT
+        symbol,
+        window_start,
+        window_end,
+        avg_price
     FROM read_parquet(?)
     ORDER BY window_start DESC
     LIMIT 10

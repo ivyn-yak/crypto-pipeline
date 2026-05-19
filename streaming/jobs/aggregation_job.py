@@ -25,15 +25,23 @@ def main():
 
     aggregated_df = (
         parsed_df
-        .withWatermark("event_time", "10 seconds")  
+        .withWatermark("event_time", "10 seconds")
         .groupBy(
-            window(col("event_time"), "1 minute"),
+            window(col("event_time"), "30 seconds"), 
             col("symbol")
         )
         .agg(
             avg("price").alias("avg_price"),
             max("price").alias("max_price"),
             min("price").alias("min_price"),
+        )
+        .select(
+            col("symbol"),
+            col("window.start").alias("window_start"),
+            col("window.end").alias("window_end"),
+            col("avg_price"),
+            col("max_price"),
+            col("min_price")
         )
     )
 
