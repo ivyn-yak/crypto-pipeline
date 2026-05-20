@@ -1,5 +1,5 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import to_timestamp, col
+from pyspark.sql.functions import to_timestamp, col, date_format
 
 from schema import crypto_schema
 from transformations import parse_kafka_stream
@@ -19,18 +19,8 @@ def main():
     parsed_df = parse_kafka_stream(df, crypto_schema)
 
     parsed_df = parsed_df.withColumn(
-        "event_time",
-        to_timestamp(col("event_time"))
+        "date", date_format(col("event_time"), "yyyy-MM-dd")
     )
-
-    # query = (
-    #     parsed_df.writeStream
-    #     .format("parquet")
-    #     .option("path", BRONZE_PATH)
-    #     .option("checkpointLocation", CHECKPOINT_BRONZE)
-    #     .outputMode("append")
-    #     .start()
-    # )
 
     query = (
         parsed_df.writeStream
@@ -38,7 +28,7 @@ def main():
         .option("path", BRONZE_PATH)
         .option("checkpointLocation", CHECKPOINT_BRONZE)
         .outputMode("append")
-        .trigger(processingTime="5 seconds")   # 🔥 force micro-batch
+        .partitionBy("symbol", "date")
         .start()
     )
 

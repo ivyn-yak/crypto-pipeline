@@ -1,5 +1,5 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, to_timestamp, window, avg, max, min
+from pyspark.sql.functions import col, to_timestamp, window, avg, max, min, date_format
 
 from schema import crypto_schema
 from transformations import parse_kafka_stream
@@ -41,7 +41,8 @@ def main():
             col("window.end").alias("window_end"),
             col("avg_price"),
             col("max_price"),
-            col("min_price")
+            col("min_price"),
+            date_format(col("window.start"), "yyyy-MM-dd").alias("date")
         )
     )
 
@@ -51,6 +52,7 @@ def main():
         .format("parquet")
         .option("path", SILVER_PATH)
         .option("checkpointLocation", CHECKPOINT_SILVER)
+        .partitionBy("symbol", "date")  
         .start()
     )
 
